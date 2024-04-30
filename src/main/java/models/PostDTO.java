@@ -68,9 +68,8 @@ public class PostDTO {
         return comments;
     }
 
-    public PostDTO setComments(List<CommentDTO> comments) {
+    public void setComments(List<CommentDTO> comments) {
         this.comments = comments;
-        return this;
     }
 
     public String getContent() {

@@ -6,7 +6,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import mappers.CommentMapper;
 import mappers.PostMapper;
+import models.CommentDTO;
 import models.PostDTO;
+import org.bson.types.ObjectId;
 import responses.PostResponseRest;
 
 import java.util.ArrayList;
@@ -27,7 +29,7 @@ public class PostService implements IPostService{
         try {
             List<PostDTO> dtos = Post.findAllPosts().stream().map(item -> {
                 PostDTO dto = PostMapper.postToDTO(item);
-                dto.setComments(Comment.findByPostId(item.id.toString()).stream().map(CommentMapper::commentToDto).toList());
+                dto.setComments(getCommentsByPostId(item.id.toString()));
                 return dto;
             }).toList();
             result.getPostResponse().setPosts(dtos);
@@ -71,19 +73,19 @@ public class PostService implements IPostService{
         List<PostDTO> dtos = new ArrayList<>();
 
         try{
-            Post post = PostMapper.updateEntity((Post) Post.findById(dto.getId()), dto);
+            Post post = PostMapper.updateEntity(Post.findById(new ObjectId(dto.getId())), dto);
             if (post != null) {
                 post.update();
-                dtos.add(PostMapper.postToDTO((Post) post));
+                dtos.add(PostMapper.postToDTO(post));
                 result.getPostResponse().setPosts(dtos);
                 result.setMetadata(Response.Status.OK.name(), Response.Status.OK.getStatusCode(), Response.Status.Family.SUCCESSFUL.name());
             } else {
                 result.setMetadata(Response.Status.NOT_FOUND.name(), Response.Status.NOT_FOUND.getStatusCode(), "Post not found");
             }
         } catch ( Exception e ) {
-            result.setMetadata(Response.Status.INTERNAL_SERVER_ERROR.name(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), Response.Status.Family.SERVER_ERROR.name());
+            result.setMetadata(Response.Status.INTERNAL_SERVER_ERROR.name(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage());
             e.getStackTrace();
-            return Response.serverError().entity(result).entity(e.getMessage()).build();
+            return Response.serverError().entity(result).build();
         }
 
         return Response.ok(result).build();
@@ -103,6 +105,10 @@ public class PostService implements IPostService{
         }
 
         return Response.ok(result).build();
+    }
+
+    private List<CommentDTO> getCommentsByPostId(String post_id) {
+        return Comment.findByPostId(post_id).stream().map(CommentMapper::commentToDto).toList();
     }
 
 }

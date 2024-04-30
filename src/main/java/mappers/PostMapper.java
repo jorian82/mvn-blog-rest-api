@@ -56,6 +56,9 @@ public class PostMapper {
     }
 
     private static Post getPost(Post post, PostDTO dto) {
+        if(dto.getId() != null) {
+            post.id = new ObjectId(dto.getId());
+        }
         if(dto.getTitle()!=null) {
             post.title = dto.getTitle();
         }

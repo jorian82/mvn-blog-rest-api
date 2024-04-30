@@ -19,6 +19,19 @@ import java.util.List;
 public class RoleService implements IRoleService{
     @Override
     public Response addRole(Role role) {
+        RoleResponseRest roleResponseRest = new RoleResponseRest();
+        List<RoleDTO> roles = new ArrayList<>();
+
+        try{
+            role.persist();
+            roles.add(RoleMapper.entityToDTO(role));
+            roleResponseRest.getRoleResponse().setRoles(roles);
+            roleResponseRest.setMetadata(Response.Status.CREATED.name(), Response.Status.CREATED.getStatusCode(), Response.Status.Family.SUCCESSFUL.name());
+        } catch (Exception e) {
+            roleResponseRest.setMetadata(Response.Status.INTERNAL_SERVER_ERROR.name(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), Response.serverError().toString());
+            e.getStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(roleResponseRest.getRoleResponse()).build();
+        }
         return null;
     }
 
