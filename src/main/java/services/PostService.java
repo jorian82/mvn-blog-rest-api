@@ -3,12 +3,15 @@ package services;
 import entities.Comment;
 import entities.Post;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import mappers.CommentMapper;
 import mappers.PostMapper;
 import models.CommentDTO;
 import models.PostDTO;
 import org.bson.types.ObjectId;
+import repositories.CommentRepository;
+import repositories.PostRepository;
 import responses.PostResponseRest;
 
 import java.util.ArrayList;
@@ -22,12 +25,18 @@ import java.util.List;
 @ApplicationScoped
 public class PostService implements IPostService{
 
+    @Inject
+    PostRepository postRepository;
+
+    @Inject
+    CommentRepository commentRepository;
+
     @Override
     public Response getAllPosts() {
         PostResponseRest result = new PostResponseRest();
 
         try {
-            List<PostDTO> dtos = Post.findAllPosts().stream().map(item -> {
+            List<PostDTO> dtos = postRepository.findAll().stream().map(item -> {
                 PostDTO dto = PostMapper.postToDTO(item);
                 dto.setComments(getCommentsByPostId(item.id.toString()));
                 return dto;
@@ -51,8 +60,9 @@ public class PostService implements IPostService{
         try {
             Post post = PostMapper.dtoToPost(dto);
             if (post != null) {
-                post.persist();
-                dtos.add(PostMapper.postToDTO((Post) post));
+                postRepository.persist(post);
+//                post.persist();
+                dtos.add(PostMapper.postToDTO(post));
                 result.getPostResponse().setPosts(dtos);
                 result.setMetadata(Response.Status.OK.name(), Response.Status.OK.getStatusCode(), Response.Status.Family.SUCCESSFUL.name());
             } else {
@@ -73,9 +83,9 @@ public class PostService implements IPostService{
         List<PostDTO> dtos = new ArrayList<>();
 
         try{
-            Post post = PostMapper.updateEntity(Post.findById(new ObjectId(dto.getId())), dto);
+            Post post = PostMapper.updateEntity(postRepository.findById(new ObjectId(dto.getId())), dto);
             if (post != null) {
-                post.update();
+                postRepository.update(post);
                 dtos.add(PostMapper.postToDTO(post));
                 result.getPostResponse().setPosts(dtos);
                 result.setMetadata(Response.Status.OK.name(), Response.Status.OK.getStatusCode(), Response.Status.Family.SUCCESSFUL.name());
@@ -96,7 +106,7 @@ public class PostService implements IPostService{
         PostResponseRest result = new PostResponseRest();
 
         try{
-            Post.deletePost(id);
+            postRepository.delete("_id", new ObjectId(id));
             result.setMetadata(Response.Status.OK.name(), Response.Status.OK.getStatusCode(), Response.Status.Family.SUCCESSFUL.name());
         } catch ( Exception e ) {
             result.setMetadata(Response.Status.INTERNAL_SERVER_ERROR.name(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), Response.Status.Family.SERVER_ERROR.name());
@@ -108,7 +118,7 @@ public class PostService implements IPostService{
     }
 
     private List<CommentDTO> getCommentsByPostId(String post_id) {
-        return Comment.findByPostId(post_id).stream().map(CommentMapper::commentToDto).toList();
+        return commentRepository.find("post_id",post_id).stream().map(CommentMapper::commentToDto).toList();
     }
 
 }

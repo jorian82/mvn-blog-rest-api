@@ -11,6 +11,7 @@ public class UserDTO {
     private String password;
     private String email;
     private String role;
+    private String token;
 
     public String getId() {
         return id;
@@ -55,5 +56,13 @@ public class UserDTO {
     public UserDTO setRole(String role) {
         this.role = role;
         return this;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

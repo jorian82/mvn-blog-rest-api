@@ -2,9 +2,11 @@ package services;
 
 import entities.User;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import mappers.UserMapper;
 import models.UserDTO;
+import repositories.UserRepository;
 import responses.UserResponseRest;
 
 import java.util.ArrayList;
@@ -17,8 +19,13 @@ import java.util.List;
  */
 @ApplicationScoped
 public class UserService implements IUserService{
+
+    @Inject
+    UserRepository userRepository;
+
     @Override
     public Response login(String username, String password) {
+
         return Response.ok().build();
     }
 
@@ -40,7 +47,7 @@ public class UserService implements IUserService{
         try {
             User user = UserMapper.dtoToEntity(dto);
             if(user != null) {
-                user.persist();
+                userRepository.persist(user);
                 dtos.add(UserMapper.entityToDto(user));
                 result.getUserResponse().setUsers(dtos);
                 result.setMetadata(Response.Status.CREATED.name(), Response.Status.CREATED.getStatusCode(), Response.Status.CREATED.getReasonPhrase());
